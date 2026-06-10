@@ -1,18 +1,19 @@
 from datetime import datetime, timedelta, timezone
+import bcrypt
 from jose import jwt
-from passlib.context import CryptContext
 from .config import settings
 
-# Password hashing configuration
-password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# Convert plain password to hashed password
+# Convert a plain password to a hashed password using bcrypt
 def hash_password(password: str) -> str:
-    return password_context.hash(password)
+    password_bytes = password.encode("utf-8")
+    hashed_password = bcrypt.hashpw(password_bytes, bcrypt.gensalt())
+    return hashed_password.decode("utf-8")
 
 # Check a plain password against a stored hashed password
 def verify_password(password: str, hashed_password: str) -> bool:
-    return password_context.verify(password, hashed_password)
+    password_bytes = password.encode("utf-8")
+    hashed_password_bytes = hashed_password.encode("utf-8")
+    return bcrypt.checkpw(password_bytes, hashed_password_bytes)
 
 # Create a signed JWT access token for a user
 def create_access_token(subject: str) -> str:

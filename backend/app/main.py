@@ -4,6 +4,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi import _rate_limit_exceeded_handler
 
+from app.domains.users.router import router as users_router
 from app.core.rate_limit import limiter
 
 app = FastAPI(title = settings.app_name, description = "API for AI Learning Assistant", version = "1.0.0")
@@ -17,3 +18,6 @@ app.add_middleware(SlowAPIMiddleware)
 @limiter.limit("10/minute")  # Example: limit to 10 requests per minute per IP
 def health_check(request: Request):
     return {"message": f"{settings.app_name} is running!", "status": "healthy"}
+
+# Register domain routers
+app.include_router(users_router)

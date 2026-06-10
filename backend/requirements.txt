@@ -1,9 +1,20 @@
+# Backend dependencies for AI-Powered Learning Analytics & Personalized Study Assistant
 fastapi
+# Backend dependencies for AI-Powered Learning Analytics & Personalized Study Assistant
 uvicorn[standard]
+# For environment variable management
 python-dotenv
+# For settings management with Pydantic
 pydantic-settings
+# For database interactions
 sqlalchemy
+# PostgreSQL driver with binary dependencies for better performance
 psycopg[binary]
-passlib[bcrypt]
+# For password hashing
+bcrypt
+# For rate limiting
 slowapi
+# For JWT authentication
 python-jose[cryptography]
+# For email validation
+email-validator
