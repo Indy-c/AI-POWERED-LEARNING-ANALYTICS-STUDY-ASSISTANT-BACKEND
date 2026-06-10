@@ -1,7 +1,8 @@
 from fastapi import FastAPI
+from app.core.config import settings
 
-app = FastAPI(title = "AI Learning Assistant API", description = "API for AI Learning Assistant", version = "1.0.0")
+app = FastAPI(title = settings.app_name, description = "API for AI Learning Assistant", version = "1.0.0")
 
 @app.get("/")
 def health_check():
-    return {"message": "AI Learning Assistant API is running!", "status": "healthy"}
+    return {"message": f"{settings.app_name} is running!", "status": "healthy"}
