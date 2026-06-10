@@ -1,0 +1,1 @@
+# Flashcards domain package.

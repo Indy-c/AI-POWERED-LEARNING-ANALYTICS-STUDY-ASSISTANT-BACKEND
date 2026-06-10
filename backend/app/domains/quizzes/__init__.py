@@ -1,0 +1,1 @@
+# Quizzes domain package.
