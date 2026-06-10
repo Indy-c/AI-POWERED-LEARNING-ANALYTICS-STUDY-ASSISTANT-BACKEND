@@ -6,3 +6,4 @@ sqlalchemy
 psycopg[binary]
 passlib[bcrypt]
 slowapi
+python-jose[cryptography]
