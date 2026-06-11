@@ -18,3 +18,5 @@ slowapi
 python-jose[cryptography]
 # For email validation
 email-validator
+# For database migrations
+alembic
