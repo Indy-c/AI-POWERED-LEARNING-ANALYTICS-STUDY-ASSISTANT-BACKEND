@@ -42,3 +42,12 @@ async def save_uploaded_document(
     db.refresh(document)
 
     return document
+
+# List documents uploaded by the current user 
+def list_user_documents(db: Session, current_user: User) -> list[Document]:
+    return (
+        db.query(Document)
+        .filter(Document.owner_id == current_user.id)
+        .order_by(Document.created_at.desc())
+        .all()
+    )
