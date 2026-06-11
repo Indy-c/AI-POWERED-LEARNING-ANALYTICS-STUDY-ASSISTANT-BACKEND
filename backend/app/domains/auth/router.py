@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Request, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import create_access_token, verify_password
+from app.core.rate_limit import limiter
 from app.domains.auth.schemas import LoginRequest, TokenResponse
 from app.domains.users.service import get_user_by_email
 
@@ -11,7 +12,8 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 # Log in and receive an access token
 @router.post("/login", response_model=TokenResponse)
-def login(login_data: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")  # Example: limit to 5 login attempts per minute per IP
+def login(request: Request, login_data: LoginRequest, db: Session = Depends(get_db)):
     # Find the user by email
     user = get_user_by_email(db, login_data.email)
     if not user:

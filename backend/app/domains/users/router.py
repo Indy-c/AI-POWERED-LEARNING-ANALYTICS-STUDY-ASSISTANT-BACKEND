@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Request, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.rate_limit import limiter
 from app.domains.users.schemas import UserCreate, UserRead
 from app.domains.users.service import get_user_by_email, create_user
 from app.domains.auth.dependencies import get_current_user
@@ -12,7 +13,8 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 # Register a new user account
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def register_user(user_data: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")  # Example: limit to 5 registration attempts per minute per IP
+def register_user(request: Request, user_data: UserCreate, db: Session = Depends(get_db)):
     # Check if the email is already registered
     existing_user = get_user_by_email(db, user_data.email)
     if existing_user:
