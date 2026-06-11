@@ -20,3 +20,5 @@ python-jose[cryptography]
 email-validator
 # For database migrations
 alembic
+
+python-multipart

@@ -6,6 +6,7 @@ from slowapi import _rate_limit_exceeded_handler
 
 from app.domains.users.router import router as users_router
 from app.domains.auth.router import router as auth_router
+from app.domains.documents.router import router as documents_router
 from app.core.rate_limit import limiter
 
 app = FastAPI(title = settings.app_name, description = "API for AI Learning Assistant", version = "1.0.0")
@@ -24,3 +25,5 @@ def health_check(request: Request):
 app.include_router(users_router)
 # Register authentication routes
 app.include_router(auth_router)
+# Register document routes
+app.include_router(documents_router)
