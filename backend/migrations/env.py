@@ -5,6 +5,7 @@ from sqlalchemy import pool
 
 from app.core.database import Base
 from app.domains.users.model import User  # Import your models here to include them in migrations
+from app.domains.documents.model import Document  
 
 from alembic import context
 
