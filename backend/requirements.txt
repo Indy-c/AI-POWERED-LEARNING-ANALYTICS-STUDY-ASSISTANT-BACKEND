@@ -24,3 +24,5 @@ alembic
 python-multipart
 # PDF text extraction
 PyMuPDF
+# For Gemini AI SDK package
+google-genai

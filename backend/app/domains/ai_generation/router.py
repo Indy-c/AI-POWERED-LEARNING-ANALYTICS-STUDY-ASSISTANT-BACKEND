@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.domains.ai_generation.schemas import SummaryResponse
-from app.domains.ai_generation.service import generate_basic_summary
+from app.domains.ai_generation.service import generate_basic_summary, generate_gemini_summary
 from app.domains.auth.dependencies import get_current_user
 from app.domains.documents.pdf_text import extract_pdf_text
 from app.domains.documents.service import get_user_document, save_document_text
@@ -37,5 +37,8 @@ def generate_summary(
         
         save_document_text(db, document, document_text)
 
-    summary = generate_basic_summary(document_text)
+    try:
+        summary = generate_gemini_summary(document_text)
+    except ValueError:
+        summary = generate_basic_summary(document_text)
     return SummaryResponse(document_id=document.id, summary=summary)
