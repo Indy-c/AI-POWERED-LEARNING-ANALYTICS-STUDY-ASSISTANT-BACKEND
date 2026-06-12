@@ -7,6 +7,7 @@ from app.domains.documents.schemas import DocumentRead
 from app.domains.documents.service import (
     get_user_document,
     list_user_documents, 
+    save_document_text,
     save_uploaded_document, 
 )
 from app.domains.documents.pdf_text import extract_pdf_text
@@ -68,9 +69,17 @@ def read_document_text(
             detail="Document not found", 
         )
     
+    if document.extracted_text:
+        return {
+            "document_id": document.id,
+            "text": document.extracted_text[:5000],
+            "truncated": len(document.extracted_text) > 5000,
+        }
+    
     extracted_text = extract_pdf_text(document.file_path)
+    save_document_text(db, document, extracted_text)
     return {
-        "document_id": document_id, 
+        "document_id": document.id, 
         "text": extracted_text[:5000],
         "truncated": len(extracted_text) > 5000,
         }

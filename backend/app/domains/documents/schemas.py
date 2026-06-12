@@ -9,6 +9,7 @@ class DocumentRead(BaseModel):
     stored_filename: str
     content_type: str 
     processing_status: str
+    has_extracted_text: bool 
     created_at: datetime
     updated_at: datetime
     

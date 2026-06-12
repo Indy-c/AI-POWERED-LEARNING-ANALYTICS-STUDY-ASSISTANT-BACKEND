@@ -63,3 +63,16 @@ def get_user_document(
         .filter(Document.id == document_id, Document.owner_id == current_user.id)
         .first()
     )
+
+# Save extracted text for a document
+def save_document_text(
+        db: Session, 
+        document: Document, 
+        extracted_text: str
+) -> Document:
+    document.extracted_text = extracted_text
+    document.processing_status = "processed"
+    db.commit()
+    db.refresh(document)
+
+    return document    
