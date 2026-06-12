@@ -51,3 +51,15 @@ def list_user_documents(db: Session, current_user: User) -> list[Document]:
         .order_by(Document.created_at.desc())
         .all()
     )
+
+# Find one document owned by current user
+def get_user_document(
+    db: Session,
+    document_id: int,
+    current_user: User,
+) -> Document | None:
+    return (
+        db.query(Document)
+        .filter(Document.id == document_id, Document.owner_id == current_user.id)
+        .first()
+    )
