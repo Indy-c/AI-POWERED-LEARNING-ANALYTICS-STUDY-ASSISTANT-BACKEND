@@ -9,6 +9,7 @@ from app.domains.documents.service import (
     list_user_documents, 
     save_uploaded_document, 
 )
+from app.domains.documents.pdf_text import extract_pdf_text
 from app.domains.users.model import User
 
 # Routes for study document management
@@ -52,3 +53,24 @@ def read_document(
         )
 
     return document
+
+# Extract text from one uploaded PDF owned by the current user
+@router.get("/{document_id}/text")
+def read_document_text(
+    document_id: int,
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user),
+):
+    document = get_user_document(db, document_id, current_user)
+    if document is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Document not found", 
+        )
+    
+    extracted_text = extract_pdf_text(document.file_path)
+    return {
+        "document_id": document_id, 
+        "text": extracted_text[:5000],
+        "truncated": len(extracted_text) > 5000,
+        }
