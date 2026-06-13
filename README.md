@@ -45,6 +45,15 @@ API documentation:
 http://127.0.0.1:8000/docs
 ```
 
+## Testing
+
+Run backend tests from the `backend` folder:
+
+```bash
+cd backend
+python -m pytest
+```
+
 ## Development Status
 
 Completed backend foundations:
