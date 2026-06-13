@@ -26,3 +26,5 @@ python-multipart
 PyMuPDF
 # For Gemini AI SDK package
 google-genai
+
+pytest
