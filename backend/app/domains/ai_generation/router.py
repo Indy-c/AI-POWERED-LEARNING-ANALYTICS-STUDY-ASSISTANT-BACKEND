@@ -13,6 +13,7 @@ from app.domains.ai_generation.service import (
     generate_basic_quiz,
     generate_basic_summary,
     generate_gemini_flashcards,
+    generate_gemini_quiz,
     generate_gemini_summary,
 )
 from app.domains.auth.dependencies import get_current_user
@@ -119,9 +120,15 @@ def generate_quiz(
         current_user,
     )
 
-    questions = generate_basic_quiz(document_text)
+    try:
+        questions = generate_gemini_quiz(document_text)
+        provider = "gemini"
+    except ValueError:
+        questions = generate_basic_quiz(document_text)
+        provider = "basic"
+
     return QuizGenerationResponse(
         document_id=resolved_document_id,
         questions=questions,
-        provider="basic",
+        provider=provider,
     )

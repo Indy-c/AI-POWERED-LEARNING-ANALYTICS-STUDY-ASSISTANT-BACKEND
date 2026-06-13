@@ -94,3 +94,34 @@ Study material:
         return json.loads(response_text)
     except json.JSONDecodeError as exc:
         raise ValueError("Gemini returned invalid flashcard JSON") from exc
+    
+# Generate quiz questions using Gemini
+def generate_gemini_quiz(document_text: str) -> list[dict[str, object]]:
+        client = get_gemini_client()
+
+        prompt = f"""
+You are an academic quiz generator.
+
+Create 5 multiple-choice quiz questions from the study material below.
+Return only valid JSON in this exact format:
+[
+  {{
+    "question": "question text",
+    "choices": ["A", "B", "C", "D"],
+    "correct_answer": "correct choice text"
+  }}
+]
+
+Study material:
+{document_text[:12000]}
+"""
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+    )
+        response_text = response.text or "[]"
+
+        try:
+            return json.loads(response_text)
+        except json.JSONDecodeError as exc:
+            raise ValueError("Gemini returned invalid quiz JSON") from exc
