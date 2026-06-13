@@ -27,6 +27,11 @@ docker compose up --build
 
 AI features use a basic fallback unless `GEMINI_API_KEY` is set in `backend/.env`.
 
+Environment files:
+
+- `.env.example` is for Docker Compose variables from the project root.
+- `backend/.env.example` is for running the backend directly from the `backend` folder.
+
 Run database migrations from the backend folder:
 
 ```bash
