@@ -1,4 +1,5 @@
 from google import genai
+import json
 
 from app.core.config import settings
 
@@ -66,3 +67,27 @@ def generate_basic_quiz(document_text: str) -> list[dict[str, object]]:
             "correct_answer": preview,
         }
     ]
+
+# Generate study flashcards using Gemini
+def generate_gemini_flashcards(document_text: str) -> list[dict[str, str]]:
+    client = get_gemini_client()
+
+    prompt = f"""
+You are an academic study assistant.
+
+Create 5 flashcards from the study material below.
+Return only valid JSON in this exact format:
+[
+  {{"question": "question text", "answer": "answer text"}}
+]
+
+Study material:
+{document_text[:12000]}
+"""
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt,
+    )   
+    response_text = response.text or "[]"
+    
+    return json.loads(response_text)

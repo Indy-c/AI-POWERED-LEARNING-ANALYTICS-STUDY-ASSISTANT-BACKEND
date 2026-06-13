@@ -12,6 +12,7 @@ from app.domains.ai_generation.service import (
     generate_basic_flashcards,
     generate_basic_quiz,
     generate_basic_summary,
+    generate_gemini_flashcards,
     generate_gemini_summary,
 )
 from app.domains.auth.dependencies import get_current_user
@@ -91,11 +92,16 @@ def generate_flashcards(
         current_user,
     )
 
-    flashcards = generate_basic_flashcards(document_text)
+    try: 
+        flashcards = generate_gemini_flashcards(document_text)
+        provider = "gemini"
+    except ValueError:
+        flashcards = generate_basic_flashcards(document_text)
+        provider = "basic"
     return FlashcardsResponse(
         document_id=resolved_document_id,
         flashcards=flashcards,
-        provider="basic",
+        provider=provider,
     )
 
 # Generate temporary basic quiz questions for a document
