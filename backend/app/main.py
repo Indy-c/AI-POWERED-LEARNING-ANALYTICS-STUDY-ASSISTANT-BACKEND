@@ -8,6 +8,7 @@ from app.domains.users.router import router as users_router
 from app.domains.auth.router import router as auth_router
 from app.domains.documents.router import router as documents_router
 from app.domains.ai_generation.router import router as ai_generation_router
+from app.domains.quizzes.router import router as quizzes_router
 from app.core.rate_limit import limiter
 
 app = FastAPI(title = settings.app_name, description = "API for AI Learning Assistant", version = "1.0.0")
@@ -30,3 +31,5 @@ app.include_router(auth_router)
 app.include_router(documents_router)
 # Register AI generation routes
 app.include_router(ai_generation_router)
+# Register Quizzes routes
+app.include_router(quizzes_router)
