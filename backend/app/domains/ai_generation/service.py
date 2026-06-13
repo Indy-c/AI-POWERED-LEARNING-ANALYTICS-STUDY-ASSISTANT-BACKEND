@@ -10,6 +10,17 @@ def get_gemini_client() -> genai.Client:
     
     return genai.Client(api_key=settings.gemini_api_key)
 
+#Parse JSON returned by Gemini, even if wrapped in markdown fences
+def parse_gemini_json(response_text: str):
+    cleaned_text = response_text.strip()
+
+    if cleaned_text.startswith("```json"):
+        cleaned_text = cleaned_text.removeprefix("```json").removesuffix("```").strip()
+    elif cleaned_text.startswith("```"):
+        cleaned_text = cleaned_text.removeprefix("```").removesuffix("```").strip()
+
+    return json.loads(cleaned_text)
+
 # Generate a study summary using Gemini
 def generate_gemini_summary(document_text: str) -> str:
     client = get_gemini_client()
@@ -91,7 +102,7 @@ Study material:
     response_text = response.text or "[]"
     
     try: 
-        return json.loads(response_text)
+        return parse_gemini_json(response_text)
     except json.JSONDecodeError as exc:
         raise ValueError("Gemini returned invalid flashcard JSON") from exc
     
@@ -122,6 +133,6 @@ Study material:
         response_text = response.text or "[]"
 
         try:
-            return json.loads(response_text)
+            return parse_gemini_json(response_text)
         except json.JSONDecodeError as exc:
             raise ValueError("Gemini returned invalid quiz JSON") from exc
