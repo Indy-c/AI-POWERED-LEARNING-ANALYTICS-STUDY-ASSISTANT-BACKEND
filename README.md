@@ -25,6 +25,8 @@ Start the backend and PostgreSQL:
 docker compose up --build
 ```
 
+AI features use a basic fallback unless `GEMINI_API_KEY` is set in `backend/.env`.
+
 Run database migrations from the backend folder:
 
 ```bash
