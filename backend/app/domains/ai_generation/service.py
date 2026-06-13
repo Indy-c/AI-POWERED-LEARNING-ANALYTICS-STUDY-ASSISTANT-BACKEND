@@ -36,3 +36,15 @@ Study material:
 def generate_basic_summary(document_text: str) -> str:
     cleaned_text = " ".join(document_text.split())
     return cleaned_text[:1000]
+
+# Create simple temporary flashcards from document text
+def generate_basic_flashcards(document_text: str) -> list[dict[str, str]]:
+    cleaned_text = " ".join(document_text.split())
+    preview = cleaned_text[:300]
+
+    return [
+        {
+            "question": "What is the main idea of this document?",
+            "answer": preview,
+        }
+    ]
