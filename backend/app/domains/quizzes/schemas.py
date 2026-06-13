@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from datetime import datetime
 
 # One answer submitted by a student
 class QuizAnswerSubmission(BaseModel):
@@ -17,3 +18,14 @@ class QuizScoreResponse(BaseModel):
     total_questions: int
     correct_answers: int
     score_percentage: float
+
+# Saved quiz attempt returned by the API
+class QuizAttemptRead(BaseModel):
+    id: int
+    document_id: int
+    total_questions: int
+    correct_answers: int
+    score_percentage: float
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
