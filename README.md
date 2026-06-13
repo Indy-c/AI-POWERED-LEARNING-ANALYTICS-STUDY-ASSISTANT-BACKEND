@@ -63,6 +63,7 @@ Enable it once after cloning:
 
 ```bash
 git config core.hooksPath .githooks
+```
 
 ## Development Status
 
@@ -85,4 +86,7 @@ Planned backend features:
 - Weak topic detection
 - Personalized study roadmap
 - Analytics endpoints
+
+```
+
 ```
