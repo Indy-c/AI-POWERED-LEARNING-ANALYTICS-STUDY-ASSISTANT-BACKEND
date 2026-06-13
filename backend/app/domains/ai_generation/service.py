@@ -48,3 +48,21 @@ def generate_basic_flashcards(document_text: str) -> list[dict[str, str]]:
             "answer": preview,
         }
     ]
+
+# Create simple temporary quiz questions from document text
+def generate_basic_quiz(document_text: str) -> list[dict[str, object]]:
+    cleaned_text = " ".join(document_text.split())
+    preview = cleaned_text[:200]
+
+    return [
+        {
+            "question": "What is this study material mainly about?",
+            "choices": [
+                preview,
+                "A random unrelated topic",
+                "A user authentication system only",
+                "A database migration tool only",
+            ],
+            "correct_answer": preview,
+        }
+    ]
