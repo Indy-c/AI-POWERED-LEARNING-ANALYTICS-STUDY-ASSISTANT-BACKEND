@@ -2,7 +2,10 @@
 .env
 .env.*
 backend/.env
+
+# DO NOT IGNORE THIS FILES
 !backend/.env.example
+!.env.example
 
 # Python cache
 __pycache__/
