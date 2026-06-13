@@ -22,6 +22,33 @@ from app.domains.users.model import User
 # Router for AI-generated learning resources
 router = APIRouter(prefix="/ai", tags=["AI Generation"])
 
+# Load extracted text for a document owned by the current user
+def get_document_text_or_error(
+        db: Session,
+        document_id: int, 
+        current_user: User,
+) -> tuple[int, str]:
+    document = get_user_document(db, document_id, current_user)
+    if document is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+    
+    document_text = document.extracted_text
+    if document_text:
+        return document.id, document_text
+    try:
+        document_text = extract_pdf_text(document.file_path)
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Document file is missing. Please upload the PDF again.",
+        )
+    
+    save_document_text(db, document, document_text)
+    return document.id, document_text
+
 # Generate a temporary basic summary for a document
 @router.post("/documents/{document_id}/summary", response_model=SummaryResponse)
 @limiter.limit("5/hour") 
@@ -30,24 +57,12 @@ def generate_summary(
     document_id: int, 
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
-    document = get_user_document(db, document_id, current_user)
-    if document is None: 
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Document not found",
-        )
-    document_text = document.extracted_text
-    if not document_text:
-        try: 
-            document_text = extract_pdf_text(document.file_path)
-        except FileNotFoundError:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Document file is missing. Please upload the PDF again.",
-            )
-        
-        save_document_text(db, document, document_text)
+):   
+    resolved_document_id, document_text = get_document_text_or_error(
+        db,
+        document_id,
+        current_user,
+    )
 
     try:
         summary = generate_gemini_summary(document_text)
@@ -55,7 +70,11 @@ def generate_summary(
     except ValueError:
         summary = generate_basic_summary(document_text)
         provider = "basic"
-    return SummaryResponse(document_id=document.id, summary=summary, provider=provider)
+    return SummaryResponse(
+        document_id=resolved_document_id, 
+        summary=summary, 
+        provider=provider
+        )
 
 # Generate temporary basic flashcards for a document
 @router.post("/documents/{document_id}/flashcards", response_model=FlashcardsResponse)
@@ -66,27 +85,15 @@ def generate_flashcards(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    document = get_user_document(db, document_id, current_user)
-    if document is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Document not found",
-        )
-    document_text = document.extracted_text
-    if not document_text:
-        try:
-            document_text = extract_pdf_text(document.file_path)
-        except FileNotFoundError:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Document file is missing. Please upload the PDF again.",
-            )
-        
-        save_document_text(db, document, document_text)
+    resolved_document_id, document_text = get_document_text_or_error(
+        db,
+        document_id,
+        current_user,
+    )
 
     flashcards = generate_basic_flashcards(document_text)
     return FlashcardsResponse(
-        document_id=document.id,
+        document_id=resolved_document_id,
         flashcards=flashcards,
         provider="basic",
     )
@@ -100,28 +107,15 @@ def generate_quiz(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    document = get_user_document(db, document_id, current_user)
-    if document is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Document not found",
-        )
-    
-    document_text = document.extracted_text
-    if not document_text:
-        try:
-            document_text = extract_pdf_text(document.file_path)
-        except FileNotFoundError:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Document file is missing. Please upload the PDF again.",
-            )
-
-        save_document_text(db, document, document_text)
+    resolved_document_id, document_text = get_document_text_or_error(
+        db,
+        document_id,
+        current_user,
+    )
 
     questions = generate_basic_quiz(document_text)
     return QuizGenerationResponse(
-        document_id=document.id,
+        document_id=resolved_document_id,
         questions=questions,
         provider="basic",
     )
