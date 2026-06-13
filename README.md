@@ -86,7 +86,3 @@ Planned backend features:
 - Weak topic detection
 - Personalized study roadmap
 - Analytics endpoints
-
-```
-
-```
