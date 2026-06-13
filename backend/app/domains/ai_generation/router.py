@@ -39,6 +39,8 @@ def generate_summary(
 
     try:
         summary = generate_gemini_summary(document_text)
+        provider = "gemini"
     except ValueError:
         summary = generate_basic_summary(document_text)
-    return SummaryResponse(document_id=document.id, summary=summary)
+        provider = "basic"
+    return SummaryResponse(document_id=document.id, summary=summary, provider=provider)
