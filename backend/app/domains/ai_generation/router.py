@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.rate_limit import limiter
 from app.domains.ai_generation.schemas import (
     FlashcardsResponse,
     QuizGenerationResponse,
@@ -23,7 +24,9 @@ router = APIRouter(prefix="/ai", tags=["AI Generation"])
 
 # Generate a temporary basic summary for a document
 @router.post("/documents/{document_id}/summary", response_model=SummaryResponse)
+@limiter.limit("5/hour") 
 def generate_summary(
+    request: Request,
     document_id: int, 
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -56,7 +59,9 @@ def generate_summary(
 
 # Generate temporary basic flashcards for a document
 @router.post("/documents/{document_id}/flashcards", response_model=FlashcardsResponse)
+@limiter.limit("5/hour")
 def generate_flashcards(
+    request: Request,
     document_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -88,7 +93,9 @@ def generate_flashcards(
 
 # Generate temporary basic quiz questions for a document
 @router.post("/documents/{document_id}/quiz", response_model=QuizGenerationResponse)
+@limiter.limit("5/hour")
 def generate_quiz(
+    request: Request,
     document_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
