@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd backend || exit 1
+python -m pytest -v

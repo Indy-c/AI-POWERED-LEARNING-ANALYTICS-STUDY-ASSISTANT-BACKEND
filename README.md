@@ -12,6 +12,7 @@ Backend API for an AI-powered learning platform that supports PDF study material
 - JWT Authentication
 - bcrypt Password Hashing
 - SlowAPI Rate Limiting
+- Pytest
 - PyMuPDF
 - Gemini AI API
 - LangChain
@@ -51,8 +52,17 @@ Run backend tests from the `backend` folder:
 
 ```bash
 cd backend
-python -m pytest
+python -m pytest -v
 ```
+
+### Git Pre-Push Hook
+
+This project includes a pre-push hook that runs backend tests before pushing.
+
+Enable it once after cloning:
+
+```bash
+git config core.hooksPath .githooks
 
 ## Development Status
 
@@ -75,3 +85,4 @@ Planned backend features:
 - Weak topic detection
 - Personalized study roadmap
 - Analytics endpoints
+```
