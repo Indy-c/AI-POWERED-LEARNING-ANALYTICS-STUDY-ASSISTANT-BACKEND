@@ -5,6 +5,8 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/learning_assistant
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-this-local-dev-secret}
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:
