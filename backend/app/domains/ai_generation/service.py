@@ -90,4 +90,7 @@ Study material:
     )   
     response_text = response.text or "[]"
     
-    return json.loads(response_text)
+    try: 
+        return json.loads(response_text)
+    except json.JSONDecodeError as exc:
+        raise ValueError("Gemini returned invalid flashcard JSON") from exc
