@@ -37,3 +37,25 @@ API documentation:
 ```text
 http://127.0.0.1:8000/docs
 ```
+
+## Development Status
+
+Completed backend foundations:
+
+- FastAPI project structure
+- Docker and PostgreSQL setup
+- JWT registration and login
+- Protected user profile route
+- PDF upload and document management
+- PDF text extraction with PyMuPDF
+- Alembic database migrations
+- Basic AI summary, flashcard, and quiz generation endpoints
+- Rate limiting for authentication and AI endpoints
+
+Planned backend features:
+
+- Real Gemini-powered flashcards and quizzes
+- Saved quiz attempts and scoring
+- Weak topic detection
+- Personalized study roadmap
+- Analytics endpoints
