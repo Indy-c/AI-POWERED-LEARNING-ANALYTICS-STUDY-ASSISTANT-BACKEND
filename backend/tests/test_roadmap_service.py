@@ -1,4 +1,5 @@
 import pytest 
+from types import SimpleNamespace
 from app.domains.roadmap.service import (
     generate_basic_roadmap,
     generate_gemini_roadmap,
@@ -36,6 +37,26 @@ def test_generate_gemini_roadmap_requires_api_key(monkeypatch):
     monkeypatch.setattr(
         "app.domains.roadmap.service.settings.gemini_api_key",
         None,
+    )
+
+    with pytest.raises(ValueError):
+        generate_gemini_roadmap("Photosynthesis helps plants make food.")
+
+def test_generate_gemini_roadmap_rejects_invalid_json(monkeypatch):
+    monkeypatch.setattr(
+        "app.domains.roadmap.service.settings.gemini_api_key",
+        "fake-api-key",
+    )
+
+    fake_client = SimpleNamespace(
+        models = SimpleNamespace(
+            generate_content = lambda model, contents: SimpleNamespace(text = "not json")
+        )    
+    )
+
+    monkeypatch.setattr(
+        "app.domains.roadmap.service.genai.Client",
+        lambda api_key: fake_client,
     )
 
     with pytest.raises(ValueError):
