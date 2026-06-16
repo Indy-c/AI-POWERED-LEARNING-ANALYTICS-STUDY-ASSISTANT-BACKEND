@@ -6,7 +6,7 @@ from app.domains.auth.dependencies import get_current_user
 from app.domains.documents.pdf_text import extract_pdf_text
 from app.domains.documents.service import get_user_document, save_document_text
 from app.domains.roadmap.schemas import RoadmapResponse
-from app.domains.roadmap.service import generate_basic_roadmap
+from app.domains.roadmap.service import generate_basic_roadmap, generate_gemini_roadmap
 from app.domains.users.model import User
 
 # Routes for study roadmap generation
@@ -31,10 +31,15 @@ def generate_document_roadmap(
         document_text = extract_pdf_text(document.file_path)
         save_document_text(db, document, document_text)
 
-    steps = generate_basic_roadmap(document_text)
+    try:
+        steps = generate_gemini_roadmap(document_text)
+        provider = "gemini"
+    except ValueError:
+        steps = generate_basic_roadmap(document_text)
+        provider = "basic"
 
     return RoadmapResponse(
         document_id=document.id,
         steps=steps,
-        provider="basic",
+        provider=provider,
     )
