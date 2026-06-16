@@ -1,4 +1,10 @@
-from app.domains.roadmap.service import generate_basic_roadmap, prepare_roadmap_source
+import pytest 
+from app.domains.roadmap.service import (
+    generate_basic_roadmap,
+    generate_gemini_roadmap,
+    prepare_roadmap_source,
+)
+
 
 def test_prepare_roadmap_source_cleans_whitespace():
     text = """
@@ -25,3 +31,12 @@ def test_generate_basic_roadmap_returns_study_steps():
     assert len(steps) == 4
     assert steps[0].title == "Review the main concept"
     assert "Photosynthesis" in steps[0].description
+
+def test_generate_gemini_roadmap_requires_api_key(monkeypatch):
+    monkeypatch.setattr(
+        "app.domains.roadmap.service.settings.gemini_api_key",
+        None,
+    )
+
+    with pytest.raises(ValueError):
+        generate_gemini_roadmap("Photosynthesis helps plants make food.")
