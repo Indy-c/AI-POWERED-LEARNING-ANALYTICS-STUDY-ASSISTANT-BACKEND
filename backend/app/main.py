@@ -11,6 +11,7 @@ from app.domains.ai_generation.router import router as ai_generation_router
 from app.domains.quizzes.router import router as quizzes_router
 from app.domains.flashcards.router import router as flashcards_router
 from app.domains.analytics.router import router as analytics_router
+from app.domains.roadmap.router import router as roadmap_router
 from app.core.rate_limit import limiter
 
 app = FastAPI(title = settings.app_name, description = "API for AI Learning Assistant", version = "1.0.0")
@@ -39,3 +40,5 @@ app.include_router(quizzes_router)
 app.include_router(flashcards_router)
 # Register analytics routes
 app.include_router(analytics_router)
+# Register roadmap routes
+app.include_router(roadmap_router)
