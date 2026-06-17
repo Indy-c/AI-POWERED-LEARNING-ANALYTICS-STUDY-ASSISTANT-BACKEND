@@ -25,7 +25,7 @@ allowed_origins = [
 # Allow frontend apps to call this API from a browser
 app.add_middleware(
     CORSMiddleware,
-    allowed_origins=allowed_origins,
+    allow_origins=allowed_origins,
     allowed_credentials = True,
     allowed_methods=["*"],
     allowed_headers=["*"],
