@@ -26,9 +26,9 @@ allowed_origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allowed_credentials = True,
-    allowed_methods=["*"],
-    allowed_headers=["*"],
+    allow_credentials = True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Register rate limiting support
