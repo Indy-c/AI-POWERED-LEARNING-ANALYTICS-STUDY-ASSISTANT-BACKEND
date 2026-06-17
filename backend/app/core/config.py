@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+    supabase_url: str | None = None
+    supabase_service_role_key: str | None = None
+    supabase_storage_bucket: str = "documents"
     gemini_api_key: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env")

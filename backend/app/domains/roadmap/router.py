@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.domains.auth.dependencies import get_current_user
-from app.domains.documents.pdf_text import extract_pdf_text
-from app.domains.documents.service import get_user_document, save_document_text
+from app.domains.documents.pdf_text import extract_pdf_text_from_bytes
+from app.domains.documents.service import download_document_bytes, get_user_document, save_document_text
 from app.domains.roadmap.schemas import RoadmapResponse
 from app.domains.roadmap.service import generate_basic_roadmap, generate_gemini_roadmap
 from app.domains.users.model import User
@@ -28,7 +28,8 @@ def generate_document_roadmap(
 
     document_text = document.extracted_text
     if not document_text:
-        document_text = extract_pdf_text(document.file_path)
+        file_bytes = download_document_bytes(document)
+        document_text = extract_pdf_text_from_bytes(file_bytes)
         save_document_text(db, document, document_text)
 
     try:

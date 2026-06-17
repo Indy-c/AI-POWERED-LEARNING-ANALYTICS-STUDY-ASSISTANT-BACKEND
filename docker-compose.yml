@@ -7,6 +7,10 @@ services:
       DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/learning_assistant
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-this-local-dev-secret}
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      SUPABASE_STORAGE_BUCKET: ${SUPABASE_STORAGE_BUCKET:-documents}
+
     volumes:
       - ./backend/uploads:/app/uploads
     depends_on:

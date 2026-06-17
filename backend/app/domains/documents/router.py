@@ -5,12 +5,13 @@ from app.core.database import get_db
 from app.domains.auth.dependencies import get_current_user
 from app.domains.documents.schemas import DocumentRead
 from app.domains.documents.service import (
+    download_document_bytes,
     get_user_document,
     list_user_documents, 
     save_document_text,
     save_uploaded_document, 
 )
-from app.domains.documents.pdf_text import extract_pdf_text
+from app.domains.documents.pdf_text import extract_pdf_text_from_bytes
 from app.domains.users.model import User
 
 # Routes for study document management
@@ -76,7 +77,8 @@ def read_document_text(
             "truncated": len(document.extracted_text) > 5000,
         }
     
-    extracted_text = extract_pdf_text(document.file_path)
+    file_bytes = download_document_bytes(document)
+    extracted_text = extract_pdf_text_from_bytes(file_bytes)
     save_document_text(db, document, extracted_text)
     return {
         "document_id": document.id, 

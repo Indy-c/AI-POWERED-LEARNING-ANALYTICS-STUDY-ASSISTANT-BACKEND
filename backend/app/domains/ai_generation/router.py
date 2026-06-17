@@ -17,8 +17,12 @@ from app.domains.ai_generation.service import (
     generate_gemini_summary,
 )
 from app.domains.auth.dependencies import get_current_user
-from app.domains.documents.pdf_text import extract_pdf_text
-from app.domains.documents.service import get_user_document, save_document_text
+from app.domains.documents.pdf_text import extract_pdf_text_from_bytes
+from app.domains.documents.service import (
+    download_document_bytes,
+    get_user_document,
+    save_document_text,
+)
 from app.domains.users.model import User
 
 # Router for AI-generated learning resources
@@ -41,7 +45,8 @@ def get_document_text_or_error(
     if document_text:
         return document.id, document_text
     try:
-        document_text = extract_pdf_text(document.file_path)
+        file_bytes = download_document_bytes(document)
+        document_text = extract_pdf_text_from_bytes(file_bytes)
     except FileNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
