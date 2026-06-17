@@ -26,6 +26,10 @@ app.add_middleware(SlowAPIMiddleware)
 def health_check(request: Request):
     return {"message": f"{settings.app_name} is running!", "status": "healthy"}
 
+@app.get("/healthz")
+def render_health_check():
+    return {"status": "healthy"}
+
 # Register domain routers
 app.include_router(users_router)
 # Register authentication routes
