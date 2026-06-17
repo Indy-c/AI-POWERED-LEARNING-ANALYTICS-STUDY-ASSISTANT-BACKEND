@@ -94,3 +94,20 @@ def save_document_text(
     db.refresh(document)
 
     return document    
+
+# Delete a document file from Supabase Storage and remove its database record
+def delete_user_document(db: Session, document_id: int, current_user: User) -> bool:
+    document = get_user_document(db, document_id, current_user)
+    if document is None:
+        return False
+    
+    if document.file_path:
+        supabase = get_supabase_client()
+        supabase.storage.from_(settings.supabase_storage_bucket).remove(
+            [document.file_path]
+        )
+
+    db.delete(document)
+    db.commit()
+
+    return True

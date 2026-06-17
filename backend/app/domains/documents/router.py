@@ -10,6 +10,7 @@ from app.domains.documents.service import (
     list_user_documents, 
     save_document_text,
     save_uploaded_document, 
+    delete_user_document,
 )
 from app.domains.documents.pdf_text import extract_pdf_text_from_bytes
 from app.domains.users.model import User
@@ -85,3 +86,19 @@ def read_document_text(
         "text": extracted_text[:5000],
         "truncated": len(extracted_text) > 5000,
         }
+
+# Delete one document owned by the current user
+@router.delete("/{document_id}")
+def delete_document(
+    document_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+): 
+    deleted = delete_user_document(db, document_id, current_user)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+    
+    return {"detail": "Document deleted successfully"}
