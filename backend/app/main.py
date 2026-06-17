@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -15,6 +16,20 @@ from app.domains.roadmap.router import router as roadmap_router
 from app.core.rate_limit import limiter
 
 app = FastAPI(title = settings.app_name, description = "API for AI Learning Assistant", version = "1.0.0")
+
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+# Allow frontend apps to call this API from a browser
+app.add_middleware(
+    CORSMiddleware,
+    allowed_origins=allowed_origins,
+    allowed_credentials = True,
+    allowed_methods=["*"],
+    allowed_headers=["*"],
+)
 
 # Register rate limiting support
 app.state.limiter = limiter
