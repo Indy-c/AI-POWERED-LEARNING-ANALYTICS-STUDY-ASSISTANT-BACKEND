@@ -35,3 +35,19 @@ def list_user_flashcards(db: Session, current_user: User) -> list[Flashcard]:
         .order_by(Flashcard.created_at.desc())
         .all()
     )
+
+# Delete one flashcard owned by the current user
+def delete_user_flashcard(db: Session, flashcard_id: int, current_user: User) -> bool:
+    flashcard = (
+        db.query(Flashcard)
+        .filter(Flashcard.id == flashcard_id, Flashcard.user_id == current_user.id)
+        .first()
+    )
+
+    if flashcard is None:
+        return False
+    
+    db.delete(flashcard)
+    db.commit()
+
+    return True
