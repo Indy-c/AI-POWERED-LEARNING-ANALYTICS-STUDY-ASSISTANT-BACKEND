@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -16,6 +17,20 @@ from app.core.rate_limit import limiter
 
 app = FastAPI(title = settings.app_name, description = "API for AI Learning Assistant", version = "1.0.0")
 
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+# Allow frontend apps to call this API from a browser
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials = True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Register rate limiting support
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -25,6 +40,10 @@ app.add_middleware(SlowAPIMiddleware)
 @limiter.limit("10/minute")  # Example: limit to 10 requests per minute per IP
 def health_check(request: Request):
     return {"message": f"{settings.app_name} is running!", "status": "healthy"}
+
+@app.get("/healthz")
+def render_health_check():
+    return {"status": "healthy"}
 
 # Register domain routers
 app.include_router(users_router)

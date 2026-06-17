@@ -5,12 +5,14 @@ from app.core.database import get_db
 from app.domains.auth.dependencies import get_current_user
 from app.domains.documents.schemas import DocumentRead
 from app.domains.documents.service import (
+    download_document_bytes,
     get_user_document,
     list_user_documents, 
     save_document_text,
     save_uploaded_document, 
+    delete_user_document,
 )
-from app.domains.documents.pdf_text import extract_pdf_text
+from app.domains.documents.pdf_text import extract_pdf_text_from_bytes
 from app.domains.users.model import User
 
 # Routes for study document management
@@ -76,10 +78,27 @@ def read_document_text(
             "truncated": len(document.extracted_text) > 5000,
         }
     
-    extracted_text = extract_pdf_text(document.file_path)
+    file_bytes = download_document_bytes(document)
+    extracted_text = extract_pdf_text_from_bytes(file_bytes)
     save_document_text(db, document, extracted_text)
     return {
         "document_id": document.id, 
         "text": extracted_text[:5000],
         "truncated": len(extracted_text) > 5000,
         }
+
+# Delete one document owned by the current user
+@router.delete("/{document_id}")
+def delete_document(
+    document_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+): 
+    deleted = delete_user_document(db, document_id, current_user)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found",
+        )
+    
+    return {"detail": "Document deleted successfully"}
