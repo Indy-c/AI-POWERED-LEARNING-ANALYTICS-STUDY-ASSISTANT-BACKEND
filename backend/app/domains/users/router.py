@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.rate_limit import limiter
 from app.domains.users.schemas import UserCreate, UserRead
-from app.domains.users.service import get_user_by_email, create_user
+from app.domains.users.service import get_user_by_email, create_user, delete_current_user_account
 from app.domains.auth.dependencies import get_current_user
 from app.domains.users.model import User
 
@@ -28,3 +28,13 @@ def register_user(request: Request, user_data: UserCreate, db: Session = Depends
 @router.get("/me", response_model=UserRead)
 def read_current_user(current_user: User = Depends(get_current_user)):
     return current_user
+
+# Delete the current user's account and all owned data
+@router.delete("/me")
+def delete_my_account(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    delete_current_user_account(db, current_user)
+    
+    return {"detail": "User account deleted successfully"}
