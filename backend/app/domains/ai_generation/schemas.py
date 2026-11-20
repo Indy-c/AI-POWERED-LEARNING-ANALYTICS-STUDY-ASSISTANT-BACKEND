@@ -21,10 +21,10 @@ class FlashcardsResponse(BaseModel):
 class QuizQuestion(BaseModel):
     question: str
     choices: list[str]
-    correct_answer: str
 
 # Quiz questions returned for a study document
 class QuizGenerationResponse(BaseModel):
+    quiz_id: int
     document_id: int
     questions: list[QuizQuestion]
     provider: str

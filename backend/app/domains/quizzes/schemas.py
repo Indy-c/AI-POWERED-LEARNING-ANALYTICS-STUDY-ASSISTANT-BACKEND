@@ -7,6 +7,16 @@ class QuizAnswerSubmission(BaseModel):
     selected_answer: str
     correct_answer: str
 
+# Quiz submission request for a generated quiz
+class QuizSelection(BaseModel):
+    question_index: int
+    selected_choice_index: int
+
+# Quiz submission request for a saved quiz
+class SavedQuizSubmitRequest(BaseModel):
+    quiz_id: int
+    answers: list[QuizSelection]
+
 # Quiz submission request from the frontend
 class QuizSubmitRequest(BaseModel):
     document_id: int
