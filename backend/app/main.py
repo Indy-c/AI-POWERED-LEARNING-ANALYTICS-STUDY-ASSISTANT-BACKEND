@@ -20,6 +20,7 @@ app = FastAPI(title = settings.app_name, description = "API for AI Learning Assi
 allowed_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://studypilot-ai-8ax3.onrender.com",
 ]
 
 # Allow frontend apps to call this API from a browser
