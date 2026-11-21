@@ -1,3 +1,5 @@
+import pytest
+from storage3.exceptions import StorageApiError
 from types import SimpleNamespace
 
 from sqlalchemy import create_engine
@@ -5,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.core.database import Base
 from app.domains.documents.model import Document
-from app.domains.documents.service import delete_user_document
+from app.domains.documents.service import delete_user_document, download_document_bytes
 from app.domains.users.model import User
 
 def create_test_db():
@@ -56,6 +58,25 @@ def test_delete_user_document_removes_file_and_database_record(monkeypatch):
     assert deleted is True
     assert removed_paths == ["users/1/documents/test.pdf"]
     assert db.get(Document, 1) is None
+
+def test_download_document_bytes_reports_missing_pdf(monkeypatch):
+    def download(_path):
+        raise StorageApiError("Object not found", "not_found", "404")
+
+    fake_client = SimpleNamespace(
+        storage=SimpleNamespace(
+            from_=lambda _bucket: SimpleNamespace(download=download)
+        )
+    )
+    monkeypatch.setattr(
+        "app.domains.documents.service.get_supabase_client",
+        lambda: fake_client,
+    )
+
+    document = Document(file_path="users/1/documents/missing.pdf")
+
+    with pytest.raises(FileNotFoundError):
+        download_document_bytes(document)
 
 def test_delete_user_document_rejects_other_users_document(monkeypatch):
     db = create_test_db()

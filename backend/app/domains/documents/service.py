@@ -4,6 +4,8 @@ from uuid import uuid4
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
+from storage3.exceptions import StorageApiError
+
 from app.core.storage import get_supabase_client
 from app.core.config import settings
 
@@ -57,9 +59,18 @@ def download_document_bytes(document: Document) -> bytes:
         raise FileNotFoundError("PDF file was not found")
     
     supabase = get_supabase_client()
-    return supabase.storage.from_(settings.supabase_storage_bucket).download(
-        document.file_path
-    )
+    try:
+        return supabase.storage.from_(settings.supabase_storage_bucket).download(
+            document.file_path
+        )
+    except StorageApiError as exc:
+        if (
+            str(exc.status) == "404"
+            and exc.code == "not_found"
+            and exc.message == "Object not found"
+        ):
+            raise FileNotFoundError("PDF file was not found") from exc
+        raise
 
 # List documents uploaded by the current user 
 def list_user_documents(db: Session, current_user: User) -> list[Document]:

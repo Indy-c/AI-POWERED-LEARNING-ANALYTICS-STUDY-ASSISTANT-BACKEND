@@ -78,7 +78,13 @@ def read_document_text(
             "truncated": len(document.extracted_text) > 5000,
         }
     
-    file_bytes = download_document_bytes(document)
+    try:
+        file_bytes = download_document_bytes(document)
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Document file is missing. Please upload the PDF again.",
+        ) from exc
     extracted_text = extract_pdf_text_from_bytes(file_bytes)
     save_document_text(db, document, extracted_text)
     return {
