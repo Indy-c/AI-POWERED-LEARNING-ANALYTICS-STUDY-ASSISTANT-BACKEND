@@ -39,7 +39,7 @@ Study material:
 {document_text[:12000]}
 """
     response = client.models.generate_content(
-        model="gemini-2.0-flash", 
+        model=settings.gemini_model, 
         contents=prompt,
     )
     return response.text or "No summary was generated."
@@ -96,7 +96,7 @@ Study material:
 {document_text[:12000]}
 """
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model=settings.gemini_model,
         contents=prompt,
     )   
     response_text = response.text or "[]"
@@ -127,7 +127,7 @@ Study material:
 {document_text[:12000]}
 """
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model=settings.gemini_model,
             contents=prompt,
     )
         response_text = response.text or "[]"

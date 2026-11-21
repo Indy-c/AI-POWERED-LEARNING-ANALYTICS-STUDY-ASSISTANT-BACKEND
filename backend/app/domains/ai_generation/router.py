@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
+from app.domains.quizzes.service import prepare_quiz_questions, save_generated_quiz
 
 from app.core.database import get_db
 from app.core.rate_limit import limiter
@@ -127,12 +128,22 @@ def generate_quiz(
 
     try:
         questions = generate_gemini_quiz(document_text)
+        prepared_questions = prepare_quiz_questions(questions)
         provider = "gemini"
     except ValueError:
         questions = generate_basic_quiz(document_text)
+        prepared_questions = prepare_quiz_questions(questions)
         provider = "basic"
 
+    quiz = save_generated_quiz(
+        db,
+        user_id=current_user.id,
+        document_id=resolved_document_id,
+        questions=prepared_questions,
+    )
+
     return QuizGenerationResponse(
+        quiz_id=quiz.id,
         document_id=resolved_document_id,
         questions=questions,
         provider=provider,
