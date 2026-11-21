@@ -58,7 +58,7 @@ def generate_gemini_roadmap(document_text: str) -> list[RoadmapStep]:
     
     client = genai.Client(api_key=settings.gemini_api_key)
     response = client.models.generate_content(
-        model = "gemini-2.5-flash",
+        model=settings.gemini_model,
         contents = prompt,
     )
 

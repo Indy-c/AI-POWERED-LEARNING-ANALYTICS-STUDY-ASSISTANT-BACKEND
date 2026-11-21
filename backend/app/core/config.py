@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     supabase_service_role_key: str | None = None
     supabase_storage_bucket: str = "documents"
     gemini_api_key: str | None = None
+    gemini_model: str = "gemini-3.1-flash-lite"
 
     model_config = SettingsConfigDict(env_file=".env")
 
