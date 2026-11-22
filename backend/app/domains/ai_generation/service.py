@@ -3,10 +3,15 @@ import json
 
 from app.core.config import settings
 
+
+class GeminiNotConfigured(ValueError):
+    pass
+
+
 # Create a Gemini API client
 def get_gemini_client() -> genai.Client:
     if not settings.gemini_api_key:
-        raise ValueError("Gemini API key is not configured")
+        raise GeminiNotConfigured("Gemini API key is not configured")
     
     return genai.Client(api_key=settings.gemini_api_key)
 
@@ -42,7 +47,9 @@ Study material:
         model=settings.gemini_model, 
         contents=prompt,
     )
-    return response.text or "No summary was generated."
+    if not (response.text or "").strip():
+        raise ValueError("Gemini returned an empty summary")
+    return response.text
 
 # Create a simple temporary summary from extracted document text
 def generate_basic_summary(document_text: str) -> str:

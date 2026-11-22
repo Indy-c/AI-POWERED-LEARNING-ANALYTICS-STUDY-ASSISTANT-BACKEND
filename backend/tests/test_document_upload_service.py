@@ -27,8 +27,8 @@ class FakeUploadFile:
         self.content = content
         self.content_type = content_type
 
-    async def read(self) -> bytes:
-        return self.content
+    async def read(self, size: int = -1) -> bytes:
+        return self.content if size == -1 else self.content[:size]
     
 def create_fake_supabase_client(uploaded_files: list[dict]):
     def upload(path: str, file_bytes: bytes, options: dict):

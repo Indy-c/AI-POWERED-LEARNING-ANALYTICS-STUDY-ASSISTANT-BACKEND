@@ -1,7 +1,9 @@
+import logging
 from pathlib import Path
 from uuid import uuid4
 
 from fastapi import UploadFile
+from starlette.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
 from storage3.exceptions import StorageApiError
@@ -10,7 +12,11 @@ from app.core.storage import get_supabase_client
 from app.core.config import settings
 
 from app.domains.documents.model import Document
+from app.domains.documents.pdf_text import PDFExtractionError, extract_pdf_text_from_bytes
 from app.domains.users.model import User
+
+logger = logging.getLogger(__name__)
+_MAX_PDF_BYTES = 10 * 1024 * 1024
 
 # Folder where uploaded PDF files are stored locally 
 UPLOAD_DIR = Path("uploads/documents")
@@ -21,37 +27,57 @@ async def save_uploaded_document(
         file: UploadFile,
         current_user: User,
     ) -> Document:
-    file_extension = Path(file.filename or "").suffix.lower()
-    stored_filename = f"{uuid4()}{file_extension}"
-    storage_path = f"users/{current_user.id}/documents/{stored_filename}"
-    file_bytes = await file.read() 
-    
-    #adding size check
-    max_file_size = 10 * 1024 * 1024 
-    if len(file_bytes) > max_file_size:
-        raise ValueError("PDF File must be 10MB or smaller for this version")
+    filename = file.filename
+    content_type = file.content_type or "application/pdf"
+    file_extension = Path(filename or "").suffix.lower()
     if file_extension != ".pdf":
         raise ValueError("Only PDF files are allowed for this version!")
+
+    file_bytes = await file.read(_MAX_PDF_BYTES + 1)
+    if len(file_bytes) > _MAX_PDF_BYTES:
+        raise ValueError("PDF File must be 10MB or smaller for this version")
+
+    owner_id = current_user.id
+    if not (db.new or db.dirty or db.deleted):
+        # Release the read transaction opened by authentication before external work.
+        db.rollback()
+    stored_filename = f"{uuid4()}{file_extension}"
+    storage_path = f"users/{owner_id}/documents/{stored_filename}"
+    extracted_text, processing_status = await run_in_threadpool(
+        _prepare_uploaded_pdf, storage_path, file_bytes, content_type,
+    )
+
+    document = Document(
+        owner_id=owner_id,
+        original_filename=filename or stored_filename,
+        stored_filename=stored_filename,
+        file_path=storage_path,
+        content_type=content_type,
+        extracted_text=extracted_text or None,
+        processing_status=processing_status,
+    )
+    db.add(document)
+    db.commit()
+    db.refresh(document)
+    return document
+
+
+def _prepare_uploaded_pdf(storage_path: str, file_bytes: bytes, content_type: str) -> tuple[str | None, str]:
+    try:
+        extracted_text = extract_pdf_text_from_bytes(file_bytes)
+        processing_status = "processed" if extracted_text else "no_text"
+    except PDFExtractionError:
+        logger.warning("Could not extract text from uploaded PDF", exc_info=True)
+        extracted_text = None
+        processing_status = "extraction_failed"
 
     supabase = get_supabase_client()
     supabase.storage.from_(settings.supabase_storage_bucket).upload(
         storage_path,
         file_bytes,
-        {"content-type": file.content_type or "application/pdf"},
+        {"content-type": content_type},
     )
-
-    document = Document(
-        owner_id = current_user.id, 
-        original_filename = file.filename or stored_filename, 
-        stored_filename = stored_filename, 
-        file_path = storage_path, 
-        content_type = file.content_type or "application/pdf", 
-    )
-    db.add(document)
-    db.commit()
-    db.refresh(document)
-
-    return document
+    return extracted_text, processing_status
 
 # Download a document file from Supabase Storage
 def download_document_bytes(document: Document) -> bytes:
@@ -99,12 +125,28 @@ def save_document_text(
         document: Document, 
         extracted_text: str
 ) -> Document:
-    document.extracted_text = extracted_text
-    document.processing_status = "processed"
+    document.extracted_text = extracted_text or None
+    document.processing_status = "processed" if extracted_text else "no_text"
     db.commit()
     db.refresh(document)
 
-    return document    
+    return document
+
+
+def get_or_extract_document_text(db: Session, document: Document) -> str:
+    if document.extracted_text or document.processing_status == "no_text":
+        return document.extracted_text or ""
+
+    file_bytes = download_document_bytes(document)
+    try:
+        extracted_text = extract_pdf_text_from_bytes(file_bytes)
+    except PDFExtractionError:
+        document.processing_status = "extraction_failed"
+        db.commit()
+        raise
+
+    save_document_text(db, document, extracted_text)
+    return extracted_text
 
 # Delete a document file from Supabase Storage and remove its database record
 def delete_user_document(db: Session, document_id: int, current_user: User) -> bool:

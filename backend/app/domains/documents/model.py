@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import String, DateTime, ForeignKey, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, DateTime, ForeignKey, JSON, Text, false, func
+from sqlalchemy.orm import Mapped, column_property, mapped_column
 
 from app.core.database import Base
 
@@ -15,7 +15,11 @@ class Document(Base):
     file_path: Mapped[str] = mapped_column(Text, nullable=True)
     content_type: Mapped[str] = mapped_column(String(100), default="application/pdf", nullable=True)
     processing_status: Mapped[str] = mapped_column(String(50), default="uploaded", nullable=False)
-    extracted_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extracted_text: Mapped[str | None] = mapped_column(Text, nullable=True, deferred=True)
+    has_extracted_text: Mapped[bool] = column_property(func.coalesce(func.length(extracted_text) > 0, false()))
+    summary_material: Mapped[dict | None] = mapped_column(JSON, deferred=True, deferred_group="study_materials")
+    flashcard_material: Mapped[dict | None] = mapped_column(JSON, deferred=True, deferred_group="study_materials")
+    roadmap_material: Mapped[dict | None] = mapped_column(JSON, deferred=True, deferred_group="study_materials")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), 
         default=lambda: datetime.now(timezone.utc),
@@ -27,7 +31,3 @@ class Document(Base):
         onupdate=lambda: datetime.now(timezone.utc),
         nullable=False,
     )
-
-    @property
-    def has_extracted_text(self) -> bool:
-        return bool(self.extracted_text)
