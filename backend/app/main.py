@@ -1,5 +1,10 @@
+import json
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from google.genai.errors import APIError
 from app.core.config import settings
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -16,6 +21,24 @@ from app.domains.roadmap.router import router as roadmap_router
 from app.core.rate_limit import limiter
 
 app = FastAPI(title = settings.app_name, description = "API for AI Learning Assistant", version = "1.0.0")
+logger = logging.getLogger(__name__)
+
+
+@app.exception_handler(APIError)
+async def handle_generation_error(_request: Request, exc: APIError) -> JSONResponse:
+    logger.warning("Gemini request failed with status %s", exc.code)
+    if exc.code == 429:
+        return JSONResponse(status_code=429, content={"detail": "You've reached the generation limit. Try again later."})
+    return JSONResponse(status_code=502, content={"detail": "Generation is temporarily unavailable. Please try again."})
+
+
+@app.exception_handler(RateLimitExceeded)
+def handle_rate_limit(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    response = _rate_limit_exceeded_handler(request, exc)
+    content = json.loads(response.body)
+    content["detail"] = "Too many requests. Please try again later."
+    headers = {key: value for key, value in response.headers.items() if key != "content-length"}
+    return JSONResponse(content=content, status_code=response.status_code, headers=headers)
 
 allowed_origins = [
     "http://localhost:5173",
@@ -34,7 +57,6 @@ app.add_middleware(
 
 # Register rate limiting support
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
 @app.get("/")

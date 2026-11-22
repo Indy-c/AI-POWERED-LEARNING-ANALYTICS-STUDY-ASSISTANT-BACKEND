@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 from sqlalchemy.orm import Session
 
 from app.domains.users.model import User
@@ -11,6 +13,15 @@ def get_user_quiz(db: Session, quiz_id: int, user_id: int) -> Quiz | None:
         .filter(Quiz.id == quiz_id, Quiz.user_id == user_id)
         .one_or_none()
     )
+
+def iter_document_quizzes(db: Session, document_id: int, user_id: int) -> Iterable[Quiz]:
+    return (
+        db.query(Quiz)
+        .filter(Quiz.document_id == document_id, Quiz.user_id == user_id)
+        .order_by(Quiz.id.desc())
+        .yield_per(16)
+    )
+
 
 # Count how many submitted answers are correct
 def count_correct_answers(answers: list[QuizAnswerSubmission]) -> int:
@@ -53,11 +64,13 @@ def save_generated_quiz(
     user_id: int,
     document_id: int,
     questions: list[dict],
+    provider: str | None = None,
 ) -> Quiz:
     quiz = Quiz(
         user_id=user_id,
         document_id=document_id,
         questions=questions,
+        provider=provider,
     )
     db.add(quiz)
     db.commit()

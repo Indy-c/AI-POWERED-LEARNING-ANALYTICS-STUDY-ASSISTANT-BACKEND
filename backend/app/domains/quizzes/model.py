@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, JSON
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -17,6 +17,7 @@ class Quiz(Base):
         ForeignKey("documents.id", ondelete="CASCADE"), index=True
     )
     questions: Mapped[list[dict]] = mapped_column(JSON, nullable=False)
+    provider: Mapped[str | None] = mapped_column(String(32))
 
 # Database table for saved quiz attempts
 class QuizAttempt(Base):

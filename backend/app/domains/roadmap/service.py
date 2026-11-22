@@ -3,6 +3,7 @@ import json
 from google import genai
 
 from app.core.config import settings
+from app.domains.ai_generation.service import GeminiNotConfigured
 
 from app.domains.roadmap.schemas import RoadmapStep
 
@@ -37,7 +38,7 @@ def generate_basic_roadmap(document_text: str) -> list[RoadmapStep]:
 # Generate roadmap steps with Gemini
 def generate_gemini_roadmap(document_text: str) -> list[RoadmapStep]:
     if not settings.gemini_api_key:
-        raise ValueError("Gemini API key is not configured")
+        raise GeminiNotConfigured("Gemini API key is not configured")
     
     source = prepare_roadmap_source(document_text)
 
@@ -62,7 +63,7 @@ def generate_gemini_roadmap(document_text: str) -> list[RoadmapStep]:
         contents = prompt,
     )
 
-    raw_text = response.text.strip()
+    raw_text = (response.text or "").strip()
     roadmap_data = json.loads(raw_text)
 
     return [RoadmapStep(**step) for step in roadmap_data]

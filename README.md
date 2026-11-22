@@ -72,6 +72,11 @@ python -m alembic upgrade head
 
 ## Deployment
 
+For the study materials update, apply Alembic revision `d1e4bc693fac` (or run
+`python -m alembic upgrade head` from `backend`) before deploying the backend,
+then deploy the updated frontend. This migration adds nullable columns and
+preserves existing documents and quizzes.
+
 Current deployment shape:
 
 - Render Web Service deploys the FastAPI backend from the `development` branch.
@@ -135,9 +140,9 @@ Completed backend features:
 - Protected user profile route
 - PDF upload and document management
 - Document delete endpoint
-- PDF text extraction with PyMuPDF
+- Automatic PDF text extraction on upload with PyMuPDF
 - Alembic database migrations
-- Basic AI summary, flashcard, and quiz generation endpoints
+- Saved summaries, generated flashcards, quizzes, and roadmaps per document
 - Saved flashcards and flashcard delete endpoint
 - Saved quiz attempts and scoring
 - Analytics dashboard endpoint
