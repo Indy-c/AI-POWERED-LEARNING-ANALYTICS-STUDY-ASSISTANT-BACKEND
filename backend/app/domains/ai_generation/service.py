@@ -26,6 +26,24 @@ def parse_gemini_json(response_text: str):
 
     return json.loads(cleaned_text)
 
+
+def _select_summary_context(document_text: str) -> str:
+    max_chars = 12_000
+    if len(document_text) <= max_chars:
+        return document_text
+
+    separator = "\n\n[...]\n\n"
+    excerpt_size = (max_chars - 2 * len(separator)) // 3
+    middle_start = (len(document_text) - excerpt_size) // 2
+    return separator.join(
+        (
+            document_text[:excerpt_size],
+            document_text[middle_start : middle_start + excerpt_size],
+            document_text[-excerpt_size:],
+        )
+    )
+
+
 # Generate a study summary using Gemini
 def generate_gemini_summary(document_text: str) -> str:
     client = get_gemini_client()
@@ -41,7 +59,7 @@ Focus on:
 - exam revision points
 
 Study material:
-{document_text[:12000]}
+{_select_summary_context(document_text)}
 """
     response = client.models.generate_content(
         model=settings.gemini_model, 
