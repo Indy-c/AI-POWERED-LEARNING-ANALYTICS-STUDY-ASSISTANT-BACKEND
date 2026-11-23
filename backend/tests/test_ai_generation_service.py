@@ -4,6 +4,10 @@ from app.domains.ai_generation.service import (
     generate_basic_summary,
 )
 
+from types import SimpleNamespace
+
+from app.domains.ai_generation import service as ai_service
+
 def test_generate_basic_summary_cleans_whitespace():
     document_text = "This   is\n\nstudy   material."
     summary = generate_basic_summary(document_text)
@@ -24,3 +28,36 @@ def test_generate_basic_quiz_returns_question_choices_and_answer():
     assert questions[0]["question"] == "What is this study material mainly about?"
     assert len(questions[0]["choices"]) == 4
     assert questions[0]["correct_answer"] in questions[0]["choices"]
+
+def test_generate_gemini_summary_covers_long_document(monkeypatch):
+    filler = "Study material. " * 625  # 10,000 characters
+    document_text = (
+        f"START_JOIN\n{filler}\n"
+        f"MIDDLE_HAVING\n{filler}\n"
+        "END_TRIGGER"
+    )
+    prompts = []
+
+    def fake_generate_content(model, contents):
+        prompts.append(contents)
+        return SimpleNamespace(text="Test summary")
+
+    fake_client = SimpleNamespace(
+        models=SimpleNamespace(generate_content=fake_generate_content)
+    )
+    monkeypatch.setattr(ai_service, "get_gemini_client", lambda: fake_client)
+
+    ai_service.generate_gemini_summary(document_text)
+
+    assert len(prompts) == 1
+    sent_text = prompts[0].split("\nStudy material:\n", 1)[1].removesuffix("\n")
+    assert len(sent_text) <= 12_000
+    assert "START_JOIN" in sent_text
+    assert "MIDDLE_HAVING" in sent_text
+    assert "END_TRIGGER" in sent_text
+
+
+def test_summary_context_preserves_text_at_character_limit():
+    document_text = " Study material\n" * 750
+
+    assert ai_service._select_summary_context(document_text) == document_text
