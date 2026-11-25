@@ -27,7 +27,7 @@ def parse_gemini_json(response_text: str):
     return json.loads(cleaned_text)
 
 
-def _select_summary_context(document_text: str) -> str:
+def _select_study_context(document_text: str) -> str:
     max_chars = 12_000
     if len(document_text) <= max_chars:
         return document_text
@@ -59,7 +59,7 @@ Focus on:
 - exam revision points
 
 Study material:
-{_select_summary_context(document_text)}
+{_select_study_context(document_text)}
 """
     response = client.models.generate_content(
         model=settings.gemini_model, 
@@ -149,7 +149,7 @@ Return only valid JSON in this exact format:
 ]
 
 Study material:
-{document_text[:12000]}
+{_select_study_context(document_text)}
 """
         response = client.models.generate_content(
             model=settings.gemini_model,
