@@ -117,6 +117,23 @@ cd backend
 python -m pytest -v
 ```
 
+## Guided Study
+
+Guided study keeps page-linked outlines, lessons, quizzes, and attempts separate
+from the original document tools. It prepares the original PDF on first use and
+generates only the lesson or practice selected by the student. Guided practice
+needs a configured Gemini API key; notes and scores already saved can be reopened
+without generating again.
+
+Roll out the backend first: apply `alembic upgrade head` from the backend folder,
+then smoke-test `/documents/{id}/study` and `/analytics/study`. Deploy the frontend
+with `VITE_GUIDED_STUDY_ENABLED=true` only after those routes are available. Leave
+the flag off to keep the existing dashboard and default study tools.
+
+Guided preparation accepts text-based PDFs up to 300 pages and 1 million extracted
+characters, in addition to the existing upload limit. Oversized or scanned files
+are reported without silently sampling their contents.
+
 ### Git Pre-Push Hook
 
 This project includes a pre-push hook that runs backend tests before pushing.

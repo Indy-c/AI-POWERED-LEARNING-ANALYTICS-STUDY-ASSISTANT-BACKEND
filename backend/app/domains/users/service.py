@@ -1,12 +1,14 @@
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.database import begin_sqlite_transaction
 from app.core.storage import get_supabase_client
 from app.core.security import hash_password
 
 from app.domains.users.model import User
 from app.domains.users.schemas import UserCreate
 from app.domains.documents.model import Document
+from app.domains.documents.service import ensure_owned_document_references
 from app.domains.flashcards.model import Flashcard
 from app.domains.quizzes.model import QuizAttempt
 
@@ -29,11 +31,13 @@ def create_user(db: Session, user_data: UserCreate) -> User:
 
 # Delete the current user and all owned data
 def delete_current_user_account(db: Session, current_user: User) -> None:
+    begin_sqlite_transaction(db, write=True)
     documents = (
         db.query(Document)
         .filter(Document.owner_id == current_user.id)
         .all()
     )
+    ensure_owned_document_references(db, [document.id for document in documents], current_user.id)
 
     file_paths = [
         document.file_path

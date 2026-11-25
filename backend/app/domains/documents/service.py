@@ -2,17 +2,21 @@ import logging
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi import UploadFile
+from fastapi import HTTPException, UploadFile
 from starlette.concurrency import run_in_threadpool
+from sqlalchemy import delete, exists, or_, select
 from sqlalchemy.orm import Session
 
 from storage3.exceptions import StorageApiError
 
 from app.core.storage import get_supabase_client
 from app.core.config import settings
+from app.core.database import begin_sqlite_transaction
 
 from app.domains.documents.model import Document
 from app.domains.documents.pdf_text import PDFExtractionError, extract_pdf_text_from_bytes
+from app.domains.flashcards.model import Flashcard
+from app.domains.quizzes.model import Quiz, QuizAttempt
 from app.domains.users.model import User
 
 logger = logging.getLogger(__name__)
@@ -148,11 +152,25 @@ def get_or_extract_document_text(db: Session, document: Document) -> str:
     save_document_text(db, document, extracted_text)
     return extracted_text
 
+def ensure_owned_document_references(db: Session, document_ids: list[int], owner_id: int) -> None:
+    if not document_ids:
+        return
+    # Older SQLite databases could retain records after a document ID was reused.
+    conflicts = [
+        exists().where(model.document_id.in_(document_ids), model.user_id != owner_id)
+        for model in (Flashcard, Quiz, QuizAttempt)
+    ]
+    if db.scalar(select(or_(*conflicts))):
+        raise HTTPException(409, "Linked study records prevent deletion. No files were removed.")
+
+
 # Delete a document file from Supabase Storage and remove its database record
 def delete_user_document(db: Session, document_id: int, current_user: User) -> bool:
+    begin_sqlite_transaction(db, write=True)
     document = get_user_document(db, document_id, current_user)
     if document is None:
         return False
+    ensure_owned_document_references(db, [document_id], current_user.id)
     
     if document.file_path:
         supabase = get_supabase_client()
@@ -160,6 +178,8 @@ def delete_user_document(db: Session, document_id: int, current_user: User) -> b
             [document.file_path]
         )
 
+    db.execute(delete(Flashcard).where(Flashcard.document_id == document.id, Flashcard.user_id == current_user.id))
+    db.execute(delete(QuizAttempt).where(QuizAttempt.document_id == document.id, QuizAttempt.user_id == current_user.id))
     db.delete(document)
     db.commit()
 

@@ -10,6 +10,7 @@ from app.domains.users.model import User  # Import your models here to include t
 from app.domains.documents.model import Document  
 from app.domains.quizzes.model import QuizAttempt
 from app.domains.flashcards.model import Flashcard
+from app.domains.study import model as study_models
 from alembic import context
 
 # this is the Alembic Config object, which provides

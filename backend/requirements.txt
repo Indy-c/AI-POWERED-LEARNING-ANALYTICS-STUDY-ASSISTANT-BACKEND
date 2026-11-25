@@ -30,3 +30,6 @@ google-genai
 pytest
 
 supabase
+
+# Time zone data for study activity buckets
+tzdata
